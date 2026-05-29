@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Результаты битвы</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        .score-board { display: flex; justify-content: center; gap: 50px; font-size: 48px; margin-top: 30px; }
+        .team1-score { color: #3498db; }
+        .team2-score { color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <h1>Счет в реальном времени</h1>
+    
+    <div class="score-board">
+        <div>
+            <div>Команда 1</div>
+            <div class="team1-score" id="score1">0</div>
+        </div>
+        <div>
+            <div>Команда 2</div>
+            <div class="team2-score" id="score2">0</div>
+        </div>
+    </div>
+
+    <script>
+        const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+        const ws = new WebSocket(`${protocol}://${window.location.host}/ws`);
+
+        ws.onmessage = function(event) {
+            const scores = JSON.parse(event.data);
+            document.getElementById('score1').innerText = scores.team1;
+            document.getElementById('score2').innerText = scores.team2;
+        };
+    </script>
+</body>
+</html>
