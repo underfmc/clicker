@@ -1,30 +1,33 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Кликер: Битва команд</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-        .btn { padding: 20px 40px; font-size: 24px; margin: 10px; cursor: pointer; border: none; border-radius: 8px; color: white; }
-        .btn-team1 { background-color: #3498db; }
-        .btn-team2 { background-color: #e74c3c; }
-        .btn:active { opacity: 0.8; transform: scale(0.98); }
-    </style>
-</head>
-<body>
-    <button class="btn btn-team1" onclick="sendClick('team1')">Команда 1</button>
-    <button class="btn btn-team2" onclick="sendClick('team2')">Команда 2</button>
+{% extends "base.html" %}
 
-    <script>
-        const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-        const ws = new WebSocket(`${protocol}://${window.location.host}/ws`);
+{% block title %}ШИР — Интерактивное соревнование{% endblock %}
 
-        function sendClick(team) {
-            if (ws.readyState === WebSocket.OPEN) {
-                ws.send(team);
-            }
+{% block content %}
+<div class="container">
+    
+    <div class="buttons-wrapper">
+        <div class="icon-btn team1" onclick="sendClick('team1')">
+            <div class="fallback-text">Фото 1</div>
+            <img src="/static/team1.jpg" alt="Команда 1" class="team-photo" onerror="this.style.opacity='0'">
+        </div>
+        
+        <div class="icon-btn team2" onclick="sendClick('team2')">
+            <div class="fallback-text">Фото 2</div>
+            <img src="/static/team2.jpg" alt="Команда 2" class="team-photo" onerror="this.style.opacity='0'">
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const ws = new WebSocket(`${protocol}://${window.location.host}/ws`);
+
+    function sendClick(team) {
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(team);
         }
-    </script>
-</body>
-</html>
+    }
+</script>
+{% endblock %}

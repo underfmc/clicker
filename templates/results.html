@@ -1,39 +1,97 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Результаты битвы</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-        .score-board { display: flex; justify-content: center; gap: 50px; font-size: 48px; margin-top: 30px; }
-        .team1-score { color: #3498db; }
-        .team2-score { color: #e74c3c; }
-    </style>
-</head>
-<body>
-    <h1>Счет в реальном времени</h1>
+{% extends "base.html" %}
+
+{% block title %}ШИР — Результаты соревнования{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Динамика</h1>
     
-    <div class="score-board">
-        <div>
-            <div>Команда 1</div>
-            <div class="team1-score" id="score1">0</div>
+    <div class="main-content">
+        <div class="team-card team1">
+            <div class="result-photo-wrapper">
+                <div class="fallback-text" style="font-size: 14px;">Фото 1</div>
+                <img src="/static/team1.jpg" alt="Команда 1" class="team-photo" onerror="this.style.opacity='0'">
+            </div>
+            <div class="team-name">Команда 1</div>
+            <div class="team-score" id="score1">0</div>
         </div>
-        <div>
-            <div>Команда 2</div>
-            <div class="team2-score" id="score2">0</div>
+
+        <div class="chart-container">
+            <svg class="chart-svg" viewBox="0 0 200 200">
+                <circle class="circle-bg" cx="100" cy="100" r="70"></circle>
+                <circle class="circle-team1" id="circle1" cx="100" cy="100" r="70"></circle>
+                <circle class="circle-team2" id="circle2" cx="100" cy="100" r="70"></circle>
+            </svg>
+            <div class="chart-center-text">
+                Битва<br>команд
+                <div id="victory-status">Ничья</div>
+            </div>
+        </div>
+
+        <div class="team-card team2">
+            <div class="result-photo-wrapper">
+                <div class="fallback-text" style="font-size: 14px;">Фото 2</div>
+                <img src="/static/team2.jpg" alt="Команда 2" class="team-photo" onerror="this.style.opacity='0'">
+            </div>
+            <div class="team-name">Команда 2</div>
+            <div class="team-score" id="score2">0</div>
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <script>
-        const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-        const ws = new WebSocket(`${protocol}://${window.location.host}/ws`);
+{% block scripts %}
+<script>
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const ws = new WebSocket(`${protocol}://${window.location.host}/ws`);
+    
+    const radius = 70;
+    const circumference = 2 * Math.PI * radius; 
+    
+    const circle1 = document.getElementById('circle1');
+    const circle2 = document.getElementById('circle2');
+    const statusEl = document.getElementById('victory-status');
+    
+    circle1.style.strokeDasharray = `0 ${circumference}`;
+    circle2.style.strokeDasharray = `0 ${circumference}`;
 
-        ws.onmessage = function(event) {
-            const scores = JSON.parse(event.data);
-            document.getElementById('score1').innerText = scores.team1;
-            document.getElementById('score2').innerText = scores.team2;
-        };
-    </script>
-</body>
-</html>
+    ws.onmessage = function(event) {
+        const scores = JSON.parse(event.data);
+        
+        document.getElementById('score1').innerText = scores.team1;
+        document.getElementById('score2').innerText = scores.team2;
+
+        const total = scores.team1 + scores.team2;
+        
+        if (total === 0) {
+            circle1.style.strokeDasharray = `0 ${circumference}`;
+            circle2.style.strokeDasharray = `0 ${circumference}`;
+            statusEl.innerText = "Ничья";
+            statusEl.style.color = "#ffffff";
+        } else {
+            const team1Percentage = scores.team1 / total;
+            const team2Percentage = scores.team2 / total;
+            
+            const team1Dash = team1Percentage * circumference;
+            const team2Dash = team2Percentage * circumference;
+
+            circle2.style.strokeDasharray = `${team2Dash} ${circumference}`;
+            circle2.style.strokeDashoffset = 0; 
+            
+            circle1.style.strokeDasharray = `${team1Dash} ${circumference}`;
+            circle1.style.strokeDashoffset = -team2Dash; 
+
+            if (scores.team1 > scores.team2) {
+                statusEl.innerText = "Лидирует К1";
+                statusEl.style.color = "#3498db";
+            } else if (scores.team2 > scores.team1) {
+                statusEl.innerText = "Лидирует К2";
+                statusEl.style.color = "#e67e22";
+            } else {
+                statusEl.innerText = "Ничья";
+                statusEl.style.color = "#ffffff";
+            }
+        }
+    };
+</script>
+{% endblock %}
